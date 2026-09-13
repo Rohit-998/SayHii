@@ -78,4 +78,4 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 
-sayhii
+/sayhii/
