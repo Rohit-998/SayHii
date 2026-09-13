@@ -26,4 +26,9 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
+
+    @PostMapping("/oauth-login")
+    public ResponseEntity<AuthResponse> oauthLogin(@Valid @RequestBody com.sayhii.dto.request.OAuthLoginRequest request) {
+        return ResponseEntity.ok(authService.oauthLogin(request));
+    }
 }

@@ -70,4 +70,60 @@ public class AuthService {
                 .message("Login successful")
                 .build();
     }
+
+    public AuthResponse oauthLogin(com.sayhii.dto.request.OAuthLoginRequest request) {
+        String email = request.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email).orElse(null);
+
+        if (user == null) {
+            String baseUsername = request.getUsername();
+            if (baseUsername == null || baseUsername.isBlank()) {
+                baseUsername = email.split("@")[0].replaceAll("[^a-zA-Z0-9_]", "");
+            }
+            if (baseUsername.isBlank()) {
+                baseUsername = "user";
+            }
+
+            String finalUsername = baseUsername;
+            int counter = 1;
+            while (userRepository.existsByUsername(finalUsername)) {
+                finalUsername = baseUsername + counter;
+                counter++;
+            }
+
+            String displayName = request.getDisplayName();
+            if (displayName == null || displayName.isBlank()) {
+                displayName = finalUsername;
+            }
+
+            user = User.builder()
+                    .email(email)
+                    .username(finalUsername)
+                    .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                    .displayName(displayName)
+                    .profilePicture(request.getProfilePicture())
+                    .isOnline(true)
+                    .build();
+
+            user = userRepository.save(user);
+        } else {
+            user.setIsOnline(true);
+            if (request.getProfilePicture() != null && !request.getProfilePicture().isBlank()) {
+                user.setProfilePicture(request.getProfilePicture());
+            }
+            if ((user.getDisplayName() == null || user.getDisplayName().isBlank()) && request.getDisplayName() != null) {
+                user.setDisplayName(request.getDisplayName());
+            }
+            user = userRepository.save(user);
+        }
+
+        String token = jwtService.generateToken(user);
+
+        return AuthResponse.builder()
+                .token(token)
+                .username(user.getUsername())
+                .userId(user.getId())
+                .message("OAuth login successful")
+                .build();
+    }
 }
