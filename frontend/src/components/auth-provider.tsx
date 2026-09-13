@@ -15,6 +15,7 @@ type AuthContextValue = AuthState & {
   isDemo: boolean;
   login(username: string, password: string): Promise<void>;
   register(input: RegisterInput): Promise<void>;
+  loginWithToken(token: string): Promise<void>;
   logout(): void;
   retry(): void;
 };
@@ -151,6 +152,12 @@ export function AuthProvider({ children, demo = false, demoUser = DEMO_USER }: {
     await api.register(input);
   }, [demo]);
 
+  const loginWithToken = useCallback(async (token: string) => {
+    if (demo) return;
+    window.localStorage.setItem(TOKEN_KEY, token);
+    await validate(token);
+  }, [demo, validate]);
+
   const logout = useCallback(() => {
     if (!demo) endSession();
   }, [demo, endSession]);
@@ -160,6 +167,7 @@ export function AuthProvider({ children, demo = false, demoUser = DEMO_USER }: {
     isDemo: demo,
     login,
     register,
+    loginWithToken,
     logout,
     retry,
   };

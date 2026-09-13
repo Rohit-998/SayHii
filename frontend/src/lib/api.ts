@@ -109,4 +109,11 @@ export const api = {
     request<Room>("/api/rooms/private", { token, method: "POST", body: { userId } }),
   createGroup: (token: string, name: string, memberIds: number[]) =>
     request<Room>("/api/rooms/group", { token, method: "POST", body: { name, memberIds } }),
+  async oauthLogin(input: { email: string; username?: string; displayName?: string; profilePicture?: string; provider: string }): Promise<{ token: string }> {
+    const result = await request<{ token: string }>("/api/auth/oauth-login", { method: "POST", body: input });
+    if (!result || typeof result.token !== "string" || !result.token.trim()) {
+      throw new ApiError(200, "The server returned an invalid OAuth response. Please try again.");
+    }
+    return { token: result.token };
+  },
 };
