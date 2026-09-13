@@ -81,6 +81,13 @@ public class ChatController {
             return headerAccessor.getUser().getName();
         }
 
+        if (headerAccessor.getSessionAttributes() != null) {
+            Object sessionUser = headerAccessor.getSessionAttributes().get("username");
+            if (sessionUser != null) {
+                return sessionUser.toString();
+            }
+        }
+
         String authHeader = headerAccessor.getFirstNativeHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);

@@ -9,17 +9,14 @@ type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 function isChatMessage(value: unknown): value is ChatMessage {
   if (!value || typeof value !== "object") return false;
-  const message = value as Partial<ChatMessage>;
+  const message = value as any;
   const sender = message.sender;
-  return typeof message.id === "number" && Number.isFinite(message.id)
+  return Number.isFinite(Number(message.id))
     && typeof message.content === "string"
-    && typeof message.chatRoomId === "number" && Number.isFinite(message.chatRoomId)
-    && typeof message.createdAt === "string" && message.messageType === "TEXT"
-    && !!sender && typeof sender === "object"
-    && typeof sender.id === "number" && Number.isFinite(sender.id)
-    && typeof sender.username === "string" && typeof sender.email === "string"
-    && typeof sender.online === "boolean"
-    && (sender.displayName === undefined || typeof sender.displayName === "string");
+    && Number.isFinite(Number(message.chatRoomId))
+    && !!sender
+    && Number.isFinite(Number(sender.id))
+    && typeof sender.username === "string";
 }
 
 export function useStomp({ token, roomId, onMessage }: {
@@ -118,6 +115,7 @@ export function useStomp({ token, roomId, onMessage }: {
     try {
       client.publish({
         destination: "/app/chat.sendMessage",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: JSON.stringify({ content, chatRoomId, messageType: "TEXT" }),
       });
       return true;
@@ -125,7 +123,7 @@ export function useStomp({ token, roomId, onMessage }: {
       setStatus("error");
       return false;
     }
-  }, []);
+  }, [token]);
 
   return { status, send };
 }
