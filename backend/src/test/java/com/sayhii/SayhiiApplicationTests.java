@@ -1,13 +1,12 @@
-package com.sayhii.sayhii_backend;
+package com.sayhii;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SayhiiBackendApplicationTests {
+class SayhiiApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void contextLoads() {
+    }
 }
