@@ -29,7 +29,7 @@ public class UserService {
     }
 
     public List<UserResponse> searchUsers(String query) {
-        return userRepository.findByUsernameContainingIgnoreCase(query)
+        return userRepository.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(query, query)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());

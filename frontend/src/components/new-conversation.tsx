@@ -20,7 +20,7 @@ export function NewConversation({ onClose, onCreated, initialUser, rooms }: { on
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const search = useUserSearch(query);
-  const people = query.trim() ? search.results : isDemo ? demoPeople : [];
+  const people = (query.trim() ? search.results : isDemo ? demoPeople : []).filter(person => person.id !== user?.id);
 
   async function submit(event: FormEvent) {
     event.preventDefault();

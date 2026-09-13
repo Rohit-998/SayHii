@@ -29,6 +29,8 @@ desktop.ini
 .env
 .env*.local
 *.env
+.env.example
+*.env.example
 application-local.properties
 application-local.yml
 

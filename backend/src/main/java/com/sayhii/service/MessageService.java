@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class MessageService {
     private final ChatRoomMemberRepository chatRoomMemberRepository;
     private final UserService userService;
 
+    @Transactional
     public MessageResponse saveMessage(MessageRequest request, User sender) {
         ChatRoom chatRoom = chatRoomRepository.findById(request.getChatRoomId())
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found with id: " + request.getChatRoomId()));
@@ -44,6 +46,7 @@ public class MessageService {
         return mapToResponse(message);
     }
 
+    @Transactional(readOnly = true)
     public Page<MessageResponse> getChatHistory(Long chatRoomId, int page, int size, User currentUser) {
         if (!chatRoomMemberRepository.existsByChatRoomIdAndUserId(chatRoomId, currentUser.getId())) {
             throw new ResourceNotFoundException("Chat room not found or access denied");

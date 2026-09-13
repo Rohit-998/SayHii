@@ -2,6 +2,7 @@ package com.sayhii.repository;
 
 import com.sayhii.entity.ChatRoom;
 import com.sayhii.enums.RoomType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +14,7 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
+    @EntityGraph(attributePaths = {"createdBy", "members", "members.user"})
     @Query("SELECT cr FROM ChatRoom cr JOIN cr.members m WHERE m.user.id = :userId")
     List<ChatRoom> findAllByMemberId(@Param("userId") Long userId);
 

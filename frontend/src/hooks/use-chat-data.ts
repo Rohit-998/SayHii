@@ -127,11 +127,25 @@ export function useChatData() {
 
   function send(content: string) {
     if (!content.trim() || roomId === null || !user) return false;
-    if (!isDemo) return socket.send(content);
-    const message: ChatMessage = { id: Date.now(), chatRoomId: roomId, sender: user, content, createdAt: new Date().toISOString(), messageType: "TEXT" };
-    demo.messages[roomId] = mergeMessages(demo.messages[roomId] || [], [message]);
-    receive(message);
-    return true;
+    if (isDemo) {
+      const message: ChatMessage = { id: Date.now(), chatRoomId: roomId, sender: user, content, createdAt: new Date().toISOString(), messageType: "TEXT" };
+      demo.messages[roomId] = mergeMessages(demo.messages[roomId] || [], [message]);
+      receive(message);
+      return true;
+    }
+    const sentOverSocket = socket.send(content);
+    if (sentOverSocket) return true;
+
+    // Fallback to HTTP REST if WebSocket is temporarily reconnecting
+    if (token) {
+      api.sendMessage(token, roomId, content)
+        .then(savedMessage => {
+          if (savedMessage) receive(savedMessage);
+        })
+        .catch(() => {});
+      return true;
+    }
+    return false;
   }
 
   function addRoom(room: Room) {

@@ -102,6 +102,7 @@ public class ChatRoomService {
         return createRoom(request, currentUser);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatRoomResponse> getUserRooms(Long userId) {
         return chatRoomRepository.findAllByMemberId(userId)
                 .stream()
@@ -109,6 +110,7 @@ public class ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ChatRoomResponse getRoomById(Long roomId, User currentUser) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Chat room not found with id: " + roomId));

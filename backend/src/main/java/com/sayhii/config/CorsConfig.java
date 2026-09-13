@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${spring.websocket.allowed-origins:http://localhost:3000}")
+    @Value("${spring.websocket.allowed-origins:http://localhost:3000,https://sayhii-chatapp.vercel.app,https://*.vercel.app}")
     private String allowedOrigins;
 
     @Bean

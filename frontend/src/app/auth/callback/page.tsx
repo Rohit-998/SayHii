@@ -13,17 +13,13 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     let active = true;
+    let processed = false;
 
-    async function processOAuth() {
+    async function handleSessionUser(user: any) {
+      if (processed || !active) return;
+      processed = true;
+
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        if (!session?.user) {
-          throw new Error("No authenticated user found from provider.");
-        }
-
-        const user = session.user;
         const metadata = user.user_metadata || {};
         const email = user.email || metadata.email;
 
@@ -70,10 +66,37 @@ export default function AuthCallbackPage() {
       }
     }
 
-    processOAuth();
+    // 1. Check existing session
+    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
+      if (sessionError) {
+        if (active) setError(sessionError.message);
+        return;
+      }
+      if (session?.user) {
+        void handleSessionUser(session.user);
+      }
+    }).catch(err => {
+      if (active) setError(err instanceof Error ? err.message : "Failed to load session");
+    });
+
+    // 2. Listen for auth state change (in case PKCE or hash fragment takes a tick to exchange)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+        void handleSessionUser(session.user);
+      }
+    });
+
+    // 3. Graceful timeout fallback
+    const timeoutTimer = window.setTimeout(() => {
+      if (active && !processed) {
+        setError("Sign-in timed out. Please return to the sign-in page and try again.");
+      }
+    }, 12000);
 
     return () => {
       active = false;
+      window.clearTimeout(timeoutTimer);
+      subscription.unsubscribe();
     };
   }, [router]);
 

@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, ApiError } from "../lib/api";
+import { supabase } from "../lib/supabase";
 import type { RegisterInput, User } from "../types/chat";
 
 type AuthState = {
@@ -53,6 +54,7 @@ export function AuthProvider({ children, demo = false, demoUser = DEMO_USER }: {
     currentToken.current = null;
     if (!demo && removeStored) {
       try { window.localStorage.removeItem(TOKEN_KEY); } catch { /* Sign out even if storage is blocked. */ }
+      try { void supabase.auth.signOut(); } catch { /* Ignore social signout error */ }
     }
     setState({ ...signedOut, error });
   }, [demo, invalidate]);

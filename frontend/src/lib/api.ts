@@ -1,4 +1,4 @@
-import type { MessagePage, RegisterInput, Room, User } from "../types/chat";
+import type { ChatMessage, MessagePage, RegisterInput, Room, User } from "../types/chat";
 
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080").replace(/\/+$/, "");
 export const SOCKJS_URL = process.env.NEXT_PUBLIC_SOCKJS_URL || `${API_URL}/ws`;
@@ -109,6 +109,12 @@ export const api = {
     request<Room>("/api/rooms/private", { token, method: "POST", body: { userId } }),
   createGroup: (token: string, name: string, memberIds: number[]) =>
     request<Room>("/api/rooms/group", { token, method: "POST", body: { name, memberIds } }),
+  sendMessage: (token: string, chatRoomId: number, content: string) =>
+    request<ChatMessage>("/api/messages", {
+      token,
+      method: "POST",
+      body: { chatRoomId, content, messageType: "TEXT" },
+    }),
   async oauthLogin(input: { email: string; username?: string; displayName?: string; profilePicture?: string; provider: string }): Promise<{ token: string }> {
     const result = await request<{ token: string }>("/api/auth/oauth-login", { method: "POST", body: input });
     if (!result || typeof result.token !== "string" || !result.token.trim()) {

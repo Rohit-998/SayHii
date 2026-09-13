@@ -1,7 +1,7 @@
 import type { ChatMessage, Room, User } from "@/types/chat";
 
 export const displayName = (user: User) => user.displayName?.trim() || user.username;
-export const otherUser = (room: Room, userId: number) => room.members.find(member => member.id !== userId);
+export const otherUser = (room: Room, userId: number) => room.members?.find(member => member.id !== userId);
 export const roomName = (room: Room, userId: number) => room.privateChat ? (otherUser(room, userId) ? displayName(otherUser(room, userId)!) : "Private conversation") : room.name || "Group conversation";
 export const initials = (name: string) => name.split(/\s+/).slice(0, 2).map(part => part[0]).join("").toUpperCase();
 export const timeLabel = (date: string) => new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(new Date(date));
