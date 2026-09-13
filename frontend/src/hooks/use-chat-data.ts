@@ -127,25 +127,83 @@ export function useChatData() {
 
   function send(content: string) {
     if (!content.trim() || roomId === null || !user) return false;
+
+    const tempId = -Date.now();
+    const optimisticMessage: ChatMessage = {
+      id: tempId,
+      chatRoomId: roomId,
+      sender: user,
+      content: content.trim(),
+      createdAt: new Date().toISOString(),
+      messageType: "TEXT",
+      status: "sending",
+    };
+
+    // Immediately append optimistic message to conversation
+    setMessages(current => mergeMessages(current, [optimisticMessage]));
+    setRooms(current => sortRooms(current.map(room => room.id === roomId ? { ...room, lastMessage: optimisticMessage } : room)));
+
     if (isDemo) {
-      const message: ChatMessage = { id: Date.now(), chatRoomId: roomId, sender: user, content, createdAt: new Date().toISOString(), messageType: "TEXT" };
-      demo.messages[roomId] = mergeMessages(demo.messages[roomId] || [], [message]);
-      receive(message);
+      window.setTimeout(() => {
+        setMessages(current => current.map(m => m.id === tempId ? { ...m, status: "sent" } : m));
+      }, 350);
       return true;
     }
-    const sentOverSocket = socket.send(content);
-    if (sentOverSocket) return true;
+
+    // Set timeout to mark as failed if server doesn't respond in 12s
+    const failTimer = window.setTimeout(() => {
+      setMessages(current => current.map(m => (m.id === tempId && m.status === "sending") ? { ...m, status: "failed" } : m));
+    }, 12000);
+
+    const sentOverSocket = socket.send(content.trim());
+    if (sentOverSocket) {
+      return true;
+    }
 
     // Fallback to HTTP REST if WebSocket is temporarily reconnecting
     if (token) {
-      api.sendMessage(token, roomId, content)
+      api.sendMessage(token, roomId, content.trim())
         .then(savedMessage => {
+          window.clearTimeout(failTimer);
           if (savedMessage) receive(savedMessage);
         })
-        .catch(() => {});
+        .catch(() => {
+          window.clearTimeout(failTimer);
+          setMessages(current => current.map(m => m.id === tempId ? { ...m, status: "failed" } : m));
+        });
       return true;
     }
+
+    window.clearTimeout(failTimer);
+    setMessages(current => current.map(m => m.id === tempId ? { ...m, status: "failed" } : m));
     return false;
+  }
+
+  function retryMessage(message: ChatMessage) {
+    if (roomId === null || !user || !message.content) return;
+    setMessages(current => current.map(m => m.id === message.id ? { ...m, status: "sending" } : m));
+
+    const failTimer = window.setTimeout(() => {
+      setMessages(current => current.map(m => (m.id === message.id && m.status === "sending") ? { ...m, status: "failed" } : m));
+    }, 12000);
+
+    const sentOverSocket = socket.send(message.content);
+    if (sentOverSocket) return;
+
+    if (token) {
+      api.sendMessage(token, roomId, message.content)
+        .then(savedMessage => {
+          window.clearTimeout(failTimer);
+          if (savedMessage) receive(savedMessage);
+        })
+        .catch(() => {
+          window.clearTimeout(failTimer);
+          setMessages(current => current.map(m => m.id === message.id ? { ...m, status: "failed" } : m));
+        });
+    } else {
+      window.clearTimeout(failTimer);
+      setMessages(current => current.map(m => m.id === message.id ? { ...m, status: "failed" } : m));
+    }
   }
 
   function addRoom(room: Room) {
@@ -158,6 +216,6 @@ export function useChatData() {
     messages, roomsBusy, roomsError, retryRooms: () => setRoomsVersion(value => value + 1),
     historyBusy, historyError, hasMore, loadOlder,
     retryHistory: () => page.current < 0 ? setHistoryVersion(value => value + 1) : void loadOlder(),
-    send, connection: isDemo ? "demo" as const : socket.status,
+    send, retryMessage, connection: isDemo ? "demo" as const : socket.status,
   };
 }

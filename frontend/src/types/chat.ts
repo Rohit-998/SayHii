@@ -13,6 +13,7 @@ export interface ChatMessage {
   sender: User;
   createdAt: string;
   messageType: "TEXT";
+  status?: "sending" | "sent" | "failed";
 }
 
 export interface Room {

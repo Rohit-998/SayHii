@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
-import { ArrowDown, ArrowLeft, ArrowUp, Info, Leaf, LoaderCircle, Search, Send, Smile, X } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowLeft, ArrowUp, Check, Clock, Info, Leaf, LoaderCircle, Search, Send, Smile, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import { Avatar } from "@/components/ui";
 import { dayLabel, displayName, otherUser, roomName, timeLabel } from "@/lib/chat-utils";
 import type { ChatMessage, Room, User } from "@/types/chat";
 
-export function MessageWindow({ room, user, messages, busy, error, hasMore, loadOlder, retry, onSend, connection, onBack, onDetails, visibleOnMobile }: {
+export function MessageWindow({ room, user, messages, busy, error, hasMore, loadOlder, retry, onSend, onRetryMessage, connection, onBack, onDetails, visibleOnMobile }: {
   room: Room; user: User; messages: ChatMessage[]; busy: boolean; error: string; hasMore: boolean;
   loadOlder: () => Promise<void>; retry: () => void; onSend: (content: string) => boolean;
+  onRetryMessage?: (message: ChatMessage) => void;
   connection: string; onBack: () => void; onDetails: () => void; visibleOnMobile: boolean;
 }) {
   const [draft, setDraft] = useState("");
@@ -106,7 +107,35 @@ export function MessageWindow({ room, user, messages, busy, error, hasMore, load
             {newDay && <div className="date-divider"><span /><time dateTime={message.createdAt}>{dayLabel(message.createdAt)}</time><span /></div>}
             <div className={clsx("message-row", own && "own", sameSender && "continued")}>
               {!own && <div className={clsx("message-avatar", sameSender && "invisible")}><Avatar name={displayName(message.sender)} id={message.sender.id} small /></div>}
-              <div className="message-body">{!sameSender && <span className="message-sender">{own ? "You" : displayName(message.sender).split(" ")[0]}</span>}<div className="message-bubble">{message.content}</div><time className="message-time" dateTime={message.createdAt}>{timeLabel(message.createdAt)}</time></div>
+              <div className="message-body">
+                {!sameSender && <span className="message-sender">{own ? "You" : displayName(message.sender).split(" ")[0]}</span>}
+                <div className="message-bubble">{message.content}</div>
+                <time className="message-time" dateTime={message.createdAt}>
+                  {timeLabel(message.createdAt)}
+                  {own && message.status === "sending" && (
+                    <span className="message-status-icon sending" title="Sending...">
+                      <Clock size={10} />
+                    </span>
+                  )}
+                  {own && message.status === "failed" && (
+                    <button
+                      type="button"
+                      className="message-status-icon failed"
+                      title="Failed to send. Tap to retry."
+                      onClick={(e) => { e.stopPropagation(); onRetryMessage?.(message); }}
+                      style={{ background: "none", border: "none", padding: 0 }}
+                    >
+                      <AlertCircle size={10} />
+                      <span className="retry-text">Retry</span>
+                    </button>
+                  )}
+                  {own && (!message.status || message.status === "sent") && (
+                    <span className="message-status-icon sent" title="Sent">
+                      <Check size={10} />
+                    </span>
+                  )}
+                </time>
+              </div>
             </div>
           </div>;
         })}

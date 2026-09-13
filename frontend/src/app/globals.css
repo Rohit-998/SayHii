@@ -23,6 +23,15 @@ h1, h2, h3, p { margin: 0; }
 ::-webkit-scrollbar-track { background: transparent; }
 .landscape { position: fixed; inset: -2%; z-index: -3; background: #204d56 url('/forest.jpg') center 50% / cover no-repeat; filter: saturate(.45); will-change: transform; }
 .landscape-shade { position: fixed; inset: 0; z-index: -2; background: linear-gradient(180deg, #76adbc78 0%, #2057679c 35%, #041b28d9 100%), linear-gradient(90deg, #11354035, #06151e45); }
+.rain { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: strict; }
+.rain-drop { position: absolute; top: 0; border-radius: 999px; background: linear-gradient(180deg, transparent, #d8edf0); animation: rainfall linear infinite; }
+.rain[data-paused] .rain-drop { animation-play-state: paused; }
+@keyframes rainfall {
+  from { transform: translate3d(0, -60px, 0) rotate(9deg); }
+  to { transform: translate3d(-16vh, calc(100dvh + 60px), 0) rotate(9deg); }
+}
+@media (max-width: 680px) { .rain-drop:nth-child(n + 37) { display: none; animation: none; } }
+@media (prefers-reduced-motion: reduce) { .rain { display: none; } .rain-drop { animation: none !important; } }
 .muted { color: var(--muted); }
 .eyebrow { font-size: 9px; font-weight: 600; letter-spacing: 1.8px; color: #ccdddb; display: inline-flex; align-items: center; gap: 9px; }
 .brand { font-family: "Manrope", sans-serif; display: inline-flex; align-items: center; gap: 9px; font-size: 26px; font-weight: 750; letter-spacing: -1.2px; }
@@ -124,8 +133,14 @@ h1, h2, h3, p { margin: 0; }
 .own .message-sender { text-align: right; margin-right: 2px; }
 .message-bubble { border-radius: 13px 13px 13px 3px; background: #b5d0c713; border: 1px solid #d6e9dd15; color: #e0ebe5; font-size: 12px; line-height: 1.7; padding: 11px 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .own .message-bubble { background: linear-gradient(125deg, #d8d6b8ed, #c2cbb7ed); border-color: #e2e4c452; color: #234344; border-radius: 13px 13px 3px 13px; }
-.message-time { display: block; font-size: 8px; color: #91b0ad; margin: 5px 2px 0; }
-.own .message-time { text-align: right; }
+.message-time { display: inline-flex; align-items: center; gap: 4px; font-size: 8px; color: #91b0ad; margin: 5px 2px 0; }
+.own .message-time { justify-content: flex-end; width: 100%; }
+.message-status-icon { display: inline-flex; align-items: center; gap: 2px; }
+.message-status-icon.sending { color: #f2cca1; opacity: 0.9; }
+.message-status-icon.sent { color: #426760; opacity: 0.85; }
+.message-status-icon.failed { color: #f87171; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
+.message-status-icon.failed:hover { text-decoration: underline; }
+.message-status-icon .retry-text { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
 .composer-area { padding: 17px 32px 20px; position: relative; }
 .composer { display: flex; align-items: flex-end; gap: 10px; border: 1px solid #d9e4dc30; border-radius: 13px; padding: 10px 11px 10px 18px; background: #bacdc414; box-shadow: 0 4px 30px #021a2412; }
 .composer:focus-within { border-color: #e7cf9e80; }
