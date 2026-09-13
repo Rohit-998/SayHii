@@ -19,6 +19,7 @@ public class MessageResponse {
     private Long senderId;
     private String senderUsername;
     private String senderDisplayName;
+    private UserResponse sender;
     private Long chatRoomId;
     private LocalDateTime createdAt;
 }

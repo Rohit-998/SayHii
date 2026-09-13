@@ -22,6 +22,7 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final UserService userService;
 
     public MessageResponse saveMessage(MessageRequest request, User sender) {
         ChatRoom chatRoom = chatRoomRepository.findById(request.getChatRoomId())
@@ -61,6 +62,7 @@ public class MessageService {
                 .senderId(message.getSender().getId())
                 .senderUsername(message.getSender().getUsername())
                 .senderDisplayName(message.getSender().getDisplayName())
+                .sender(userService.mapToResponse(message.getSender()))
                 .chatRoomId(message.getChatRoom().getId())
                 .createdAt(message.getCreatedAt())
                 .build();

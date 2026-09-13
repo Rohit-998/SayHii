@@ -45,10 +45,10 @@ public class ChatRoomService {
                 throw new IllegalArgumentException("Cannot create a private chat with yourself");
             }
 
-            chatRoomRepository.findPrivateRoom(currentUser.getId(), otherUserId, RoomType.PRIVATE)
-                    .ifPresent(room -> {
-                        throw new DuplicateResourceException("Private chat room already exists with this user");
-                    });
+            var existing = chatRoomRepository.findPrivateRoom(currentUser.getId(), otherUserId, RoomType.PRIVATE);
+            if (existing.isPresent()) {
+                return mapToResponse(existing.get());
+            }
         }
 
         ChatRoom chatRoom = ChatRoom.builder()
@@ -83,6 +83,23 @@ public class ChatRoomService {
         }
 
         return mapToResponse(chatRoom);
+    }
+
+    @Transactional
+    public ChatRoomResponse createPrivateRoom(Long otherUserId, User currentUser) {
+        ChatRoomRequest request = new ChatRoomRequest();
+        request.setRoomType(RoomType.PRIVATE);
+        request.setMemberIds(List.of(otherUserId));
+        return createRoom(request, currentUser);
+    }
+
+    @Transactional
+    public ChatRoomResponse createGroupRoom(String name, List<Long> memberIds, User currentUser) {
+        ChatRoomRequest request = new ChatRoomRequest();
+        request.setName(name);
+        request.setRoomType(RoomType.GROUP);
+        request.setMemberIds(memberIds);
+        return createRoom(request, currentUser);
     }
 
     public List<ChatRoomResponse> getUserRooms(Long userId) {
@@ -130,6 +147,7 @@ public class ChatRoomService {
                 .senderId(message.getSender().getId())
                 .senderUsername(message.getSender().getUsername())
                 .senderDisplayName(message.getSender().getDisplayName())
+                .sender(userService.mapToResponse(message.getSender()))
                 .chatRoomId(message.getChatRoom().getId())
                 .createdAt(message.getCreatedAt())
                 .build();

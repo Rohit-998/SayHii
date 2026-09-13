@@ -1,5 +1,6 @@
 package com.sayhii.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,9 @@ public class UserResponse {
     private String profilePicture;
     private Boolean isOnline;
     private LocalDateTime createdAt;
+
+    @JsonProperty("online")
+    public boolean getOnline() {
+        return isOnline != null && isOnline;
+    }
 }

@@ -27,6 +27,30 @@ public class ChatRoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(chatRoomService.createRoom(request, user));
     }
 
+    @PostMapping("/private")
+    public ResponseEntity<ChatRoomResponse> createPrivateRoom(
+            @RequestBody java.util.Map<String, Long> request,
+            @AuthenticationPrincipal User user) {
+        Long userId = request.get("userId");
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(chatRoomService.createPrivateRoom(userId, user));
+    }
+
+    @PostMapping("/group")
+    public ResponseEntity<ChatRoomResponse> createGroupRoom(
+            @RequestBody java.util.Map<String, Object> request,
+            @AuthenticationPrincipal User user) {
+        String name = (String) request.get("name");
+        @SuppressWarnings("unchecked")
+        List<Number> memberInts = (List<Number>) request.get("memberIds");
+        List<Long> memberIds = memberInts != null
+                ? memberInts.stream().map(Number::longValue).toList()
+                : List.of();
+        return ResponseEntity.status(HttpStatus.CREATED).body(chatRoomService.createGroupRoom(name, memberIds, user));
+    }
+
     @GetMapping
     public ResponseEntity<List<ChatRoomResponse>> getUserRooms(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(chatRoomService.getUserRooms(user.getId()));

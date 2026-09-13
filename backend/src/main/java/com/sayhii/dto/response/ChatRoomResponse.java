@@ -1,5 +1,6 @@
 package com.sayhii.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sayhii.enums.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,9 @@ public class ChatRoomResponse {
     private List<UserResponse> members;
     private MessageResponse lastMessage;
     private LocalDateTime createdAt;
+
+    @JsonProperty("privateChat")
+    public boolean isPrivateChat() {
+        return roomType == RoomType.PRIVATE;
+    }
 }
