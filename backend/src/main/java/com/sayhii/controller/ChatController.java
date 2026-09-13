@@ -36,25 +36,7 @@ public class ChatController {
      */
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload MessageRequest request, SimpMessageHeaderAccessor headerAccessor) {
-        String username = null;
-
-        // Try getting user from Principal first
-        if (headerAccessor.getUser() != null) {
-            username = headerAccessor.getUser().getName();
-        }
-
-        // Fallback: extract from Authorization header in STOMP headers
-        if (username == null) {
-            String authHeader = headerAccessor.getFirstNativeHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                try {
-                    username = jwtService.extractUsername(token);
-                } catch (Exception e) {
-                    log.error("Failed to parse JWT token from STOMP header: {}", e.getMessage());
-                }
-            }
-        }
+        final String username = resolveUsername(headerAccessor);
 
         if (username == null) {
             log.error("Unauthorized WebSocket message attempt: No user principal or valid token found");
@@ -92,5 +74,22 @@ public class ChatController {
             @RequestParam(defaultValue = "50") int size,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(messageService.getChatHistory(chatRoomId, page, size, user));
+    }
+
+    private String resolveUsername(SimpMessageHeaderAccessor headerAccessor) {
+        if (headerAccessor.getUser() != null) {
+            return headerAccessor.getUser().getName();
+        }
+
+        String authHeader = headerAccessor.getFirstNativeHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            try {
+                return jwtService.extractUsername(token);
+            } catch (Exception e) {
+                log.error("Failed to parse JWT token from STOMP header: {}", e.getMessage());
+            }
+        }
+        return null;
     }
 }
